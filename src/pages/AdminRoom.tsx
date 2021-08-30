@@ -1,6 +1,6 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useParams } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import { database } from '../services/firebase';
 
 
@@ -12,6 +12,15 @@ import { Question } from '../components/Question';
 import { useRoom } from '../hooks/useRoom';
 // icon
 import ThumbUpAltIcon from '@material-ui/icons/ThumbUpAlt';
+import DeleteIcon from '@material-ui/icons/Delete';
+
+import Modal, {
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+
+} from '../components/Modal/index'
+import { useModal } from '../hooks/useModal';
 
 // types
 type RoomParams = {
@@ -20,41 +29,40 @@ type RoomParams = {
 
 export function AdminRoom() {
     // parametros
-    const { user } = useAuth()
+    // const { user } = useAuth()
     const params = useParams<RoomParams>();
     const roomId = params.id;
+
+    // hooks
     const { title, questions } = useRoom(roomId);
+    const { isShowing, toggle } = useModal();
+    const history = useHistory()
 
     // ESTADOS
-    const [newQuestion, setNewQuestion] = useState('');
 
 
     // metodos
 
-    async function handleSendQuestion(event: FormEvent) {
-        event.preventDefault();
+    async function handleEndRoom() {
+        database.ref(`rooms/${roomId}`).update({
+            endedAt: new Date(),
+        });
+        history.push('/')
 
-        if (newQuestion.trim() === '') {
-            return;
-        }
-        if (!user) {
-            // toast
-            throw new Error('You must be logged in');
-
-        }
-        const question = {
-            content: newQuestion,
-            author: {
-                name: user.name,
-                avatar: user.avatar
-            },
-            isHighLighted: false,
-            // destaque que o adm da
-            isAnswered: false
-        }
-        await database.ref(`rooms/${roomId}/questions`).push(question);
-        setNewQuestion('');
     }
+    async function handleDeleteQuestion(questionId: string, e: FormEvent) {
+        const el = e.target
+        if (el) {
+            await database.ref(`rooms/${roomId}/questions/${questionId}`).remove();
+
+        }
+
+        toggle();
+
+
+    }
+
+
     return (
         <div id="page-room">
             <header>
@@ -62,7 +70,7 @@ export function AdminRoom() {
                     <img src={LogoImg} alt="seuLogo" />
                     <div>
                         <RoomCode code={params.id}></RoomCode>
-                        <Button isOutlined>Encerrar sala</Button>
+                        <Button onClick={handleEndRoom} isOutlined>Encerrar sala</Button>
                     </div>
 
                 </div>
@@ -83,13 +91,25 @@ export function AdminRoom() {
                                 content={question.content}
                                 author={question.author}
                             >
-                                     <button
-                                    className="like-button"
-                                    type="button"
-                                    aria-label="Marcar como gostei"
-                                >
-                                    <span>10</span>
-                                    <ThumbUpAltIcon></ThumbUpAltIcon>
+
+                                <Modal {...{ isShowing, toggle }}>
+                                    <ModalHeader {...{ toggle }}>
+                                       Excluir comentario
+                                    </ModalHeader>
+                                    <ModalBody>
+                                        Você tem certeza que deseja excluir essa pergunta?
+                                    </ModalBody>
+                                    <ModalFooter>
+                                    
+                                        <Button onClick={(e) => handleDeleteQuestion(question.id, e)}>Confirmar</Button>
+                                        <button className="btn-cancel" onClick={toggle}>
+                                            Cancelar
+                                        </button>
+                                    </ModalFooter>
+                                </Modal>
+
+                                <button onClick={toggle} >
+                                    <DeleteIcon></DeleteIcon>
                                 </button>
                             </Question>
                         )

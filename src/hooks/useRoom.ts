@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { database } from '../services/firebase';
+import { useAuth } from './useAuth';
 
 
 type FirabaseQuestions = Record<string, {
@@ -11,6 +12,9 @@ type FirabaseQuestions = Record<string, {
     content: string;
     isAnswered: boolean;
     isHighLighted: boolean;
+    likes: Record<string, {
+        authorId: string
+    }>
 }>
 
 // typagem
@@ -23,11 +27,13 @@ type QuestionType = {
     content: string;
     isAnswered: boolean;
     isHighLighted: boolean;
+    likeCount: number,
+    likeId: string | undefined
 }
 
 
-export function useRoom(roomId: string ){
-
+export function useRoom(roomId: string) {
+    const { user } = useAuth();
     // estados
     const [questions, setQuestions] = useState<QuestionType[]>([]);
     const [title, setTitle] = useState('');
@@ -49,14 +55,21 @@ export function useRoom(roomId: string ){
                         author: value.author,
                         isHighLighted: value.isHighLighted,
                         isAnswered: value.isAnswered,
+                        likeCount: Object.values(value.likes ?? {}).length,
+                        // função some retorna o objeto se foi encontrado - true pra sim e false pra não,
+                        likeId: Object.entries(value.likes ?? {}).find(([key, like])=> like.authorId === user?.id)?.[0]
                     }
                 });
             setTitle(databaseRoom.title);
             setQuestions(parsedQuestions);
         });
 
-    }, [roomId]);
-    return{
+        return () => {
+            roomRef.off('value');
+        }
+
+    }, [roomId, user?.id]);
+    return {
         questions, title
     }
 
