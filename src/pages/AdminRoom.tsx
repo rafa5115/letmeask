@@ -13,7 +13,8 @@ import { useRoom } from '../hooks/useRoom';
 // icon
 import ThumbUpAltIcon from '@material-ui/icons/ThumbUpAlt';
 import DeleteIcon from '@material-ui/icons/Delete';
-
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import QuestionAnswerIcon from '@material-ui/icons/QuestionAnswer';
 import Modal, {
     ModalHeader,
     ModalBody,
@@ -21,6 +22,7 @@ import Modal, {
 
 } from '../components/Modal/index'
 import { useModal } from '../hooks/useModal';
+import { Tooltip } from '@material-ui/core';
 
 // types
 type RoomParams = {
@@ -62,6 +64,17 @@ export function AdminRoom() {
 
     }
 
+    async function handleCheckQuestionAsAnswered(questionId: string) {
+        await database.ref(`rooms/${roomId}/questions/${questionId}`).update({
+            isAnswered: true,
+        });
+
+    }
+    async function handleHighlightQuestion(questionId: string) {
+        await database.ref(`rooms/${roomId}/questions/${questionId}`).update({
+            isHighLighted: true,
+        });
+    }
 
     return (
         <div id="page-room">
@@ -90,17 +103,20 @@ export function AdminRoom() {
                                 key={question.id}
                                 content={question.content}
                                 author={question.author}
+                                isAnswered={question.isAnswered}
+                                isHighLighted={question.isHighLighted}
+
                             >
 
                                 <Modal {...{ isShowing, toggle }}>
                                     <ModalHeader {...{ toggle }}>
-                                       Excluir comentario
+                                        Excluir pergunta
                                     </ModalHeader>
                                     <ModalBody>
                                         Você tem certeza que deseja excluir essa pergunta?
                                     </ModalBody>
                                     <ModalFooter>
-                                    
+
                                         <Button onClick={(e) => handleDeleteQuestion(question.id, e)}>Confirmar</Button>
                                         <button className="btn-cancel" onClick={toggle}>
                                             Cancelar
@@ -108,8 +124,33 @@ export function AdminRoom() {
                                     </ModalFooter>
                                 </Modal>
 
-                                <button onClick={toggle} >
-                                    <DeleteIcon></DeleteIcon>
+                                {!question.isAnswered && (
+                                    <>
+                                        <button onClick={() => handleCheckQuestionAsAnswered(question.id)}  >
+                                            <Tooltip title="Marcar como respondida" placement="top">
+
+                                                <CheckCircleIcon ></CheckCircleIcon>
+                                            </Tooltip>
+                                        </button>
+                                        <button onClick={() => handleHighlightQuestion(question.id)} >
+                                            <Tooltip title="Destaque a pergunta" placement="top">
+
+
+                                                <QuestionAnswerIcon ></QuestionAnswerIcon>
+                                            </Tooltip>
+                                        </button>
+
+                                    </>
+
+                                )}
+
+
+                                <button onClick={toggle}  >
+                                    <Tooltip title="Deletar pergunta" placement="top">
+                                        <DeleteIcon></DeleteIcon>
+
+                                    </Tooltip>
+
                                 </button>
                             </Question>
                         )

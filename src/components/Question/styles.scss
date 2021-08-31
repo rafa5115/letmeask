@@ -7,6 +7,19 @@
     & + .question {
         margin-top: 8px;
     }
+
+    &.highlighted {
+        background: #f4f0ff;
+        border: 1px solid #835afd;
+
+        footer .user-info span {
+            color: #29292e;
+        }
+    }
+
+    &.answered {
+        background: #dbdcdd;
+    }
     p {
         color: #29292e;
     }
@@ -32,20 +45,24 @@
                 font-size: 14px;
             }
         }
+
+        > div {
+            display: flex;
+            gap: 16px;
+        }
         button {
             border: 0;
             background: transparent;
             cursor: pointer;
-            transition: filter 0.2s ;
+            transition: filter 0.2s;
             &.like-button {
                 display: flex;
                 align-items: flex-end;
                 color: #737380;
-                gap: 8px ;
+                gap: 8px;
                 svg path {
                     color: #fff;
                     stroke: #737380;
-
                 }
                 &.liked {
                     color: #835afd;
@@ -53,9 +70,8 @@
                         stroke: #835afd;
                     }
                 }
-            
             }
-            &:hover{
+            &:hover {
                 filter: brightness(0.9);
             }
         }
